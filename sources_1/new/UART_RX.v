@@ -33,11 +33,12 @@ module UART_RX
    output       o_done_bit,
    output [7:0] o_data_byte
    );
-    
-  parameter STATE_IDLE         = 2'b00;
-  parameter STATE_START_BIT    = 2'b01;
-  parameter STATE_RECEIVING    = 2'b10;
-  parameter STATE_STOP_BIT     = 2'b11;
+   
+  // One-Hot, One-Cold  
+  parameter STATE_IDLE         = 4'b0001;
+  parameter STATE_START_BIT    = 4'b0010;
+  parameter STATE_RECEIVING    = 4'b0100;
+  parameter STATE_STOP_BIT     = 4'b1000;
    
   //reg           r_Rx_Data_R = 1'b1;
   reg           rx_data   = 1'b1;
