@@ -83,6 +83,7 @@ module UART_TX
                     next_state <= STATE_TRANSMITTING;
                  end
                 else
+                     tick_counter <= 0;                
                      next_state <= STATE_IDLE;
               end
              else
@@ -132,7 +133,10 @@ module UART_TX
         end
               
         default:
+        begin
+            tick_counter <= 0;
             next_state <= STATE_IDLE;
+        end
         
     endcase
     end
@@ -147,12 +151,12 @@ module UART_TX
         
         STATE_START_BIT:
         begin
-            
+             done_bit <= 1'b0;
         end
         
         STATE_TRANSMITTING:
         begin
-            
+             done_bit <= 1'b0;
         end
         
         STATE_STOP_BIT:
@@ -162,7 +166,8 @@ module UART_TX
         
         
         default:
-            next_state <= STATE_IDLE;
+            done_bit <= 1'b0;
+
         
     endcase
         

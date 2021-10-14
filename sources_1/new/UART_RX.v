@@ -65,13 +65,19 @@ module UART_RX
    always @(*) begin: next_state_logic
     case (current_state)
         STATE_IDLE:
-        begin
-            data_index <= 0;
+        begin        
+            data_index <= 0;    
             tick_counter <= 0;
             if(rx_data == 1'b0) //Start bit detected
+             begin
+                data_index <= 0;
                 next_state <= STATE_START_BIT;
+             end
             else
+             begin
+                data_index <= 0;
                 next_state <= STATE_IDLE;
+             end
         end
         
         STATE_START_BIT:
@@ -81,14 +87,20 @@ module UART_RX
                 if(rx_data == 1'b0) //Start bit still low
                 begin
                     tick_counter <= 0; //(found middle, reset counter)
+                    data_index <= 0;
                     next_state <= STATE_RECEIVING;
                 end
                 else
+                begin
+                    tick_counter <= 0;
+                    data_index <= 0;
                     next_state <= STATE_IDLE;
+                end
              end
             else
              begin
                 tick_counter <= tick_counter + 1;
+                data_index <= 0;
                 next_state <= STATE_START_BIT;
              end
         end
@@ -110,11 +122,11 @@ module UART_RX
                         data_index <= data_index + 1;
                         next_state <= STATE_RECEIVING;
                  end
-            else
-             begin
+                else
+                 begin
                     data_index <= 0;
                     next_state <= STATE_STOP_BIT;
-              end
+                 end
              end
         end
         
@@ -123,18 +135,23 @@ module UART_RX
             if(tick_counter < 15)
              begin
                 tick_counter <= tick_counter + 1;
+                data_index <= 0;
                 next_state <= STATE_STOP_BIT;
              end
             else
              begin
                 tick_counter <= 0;
+                data_index <= 0;
                 next_state <= STATE_IDLE;
              end
         end
               
         default:
+        begin
+            tick_counter <= 0;
+            data_index <= 0;
             next_state <= STATE_IDLE;
-        
+        end
     endcase
     end
     
@@ -148,12 +165,12 @@ module UART_RX
         
         STATE_START_BIT:
         begin
-            
+             done_bit <= 1'b0;
         end
         
         STATE_RECEIVING:
         begin
-            
+             done_bit <= 1'b0;
         end
         
         STATE_STOP_BIT:
@@ -163,8 +180,9 @@ module UART_RX
         
         
         default:
-            next_state <= STATE_IDLE;
-        
+        begin
+             done_bit <= 1'b0;
+        end
     endcase
         
     end
