@@ -23,28 +23,48 @@
 module BR_GENERATOR
 #(
   //PARAMETERS
-  parameter clk_frec  = 5000000, // 5MHz
-  parameter baudrate = 19200,
-  parameter width_cont = 16,
-  parameter increment = (baudrate<<width_cont)/clk_frec
+  parameter clk_frec  = 5.0, // 5MHz
+  parameter baudrate = 9600
 
   )
   (
   //INPUTS
    input        i_clock,
    //OUTPUTS
-   output       tick
+   output     reg o_tick
    );
+   
+  localparam integer modulo = (clk_frec*1000000) / (baudrate * 16);
+  reg [ $clog2 (modulo) - 1:0] contador;
   
-   
-  reg [width_cont:0] contador;
+  
   always @(posedge i_clock)
-    contador <= contador[width_cont - 1:0] + increment;
+  begin
+    if(contador < modulo)
+        begin
+            o_tick <= 0;
+            contador <= contador + 1;
+        end
+    else
+        begin
+            o_tick <= 1;
+            contador <= 0;
+        end
+  end      
+        
 
-   assign tick = contador[width_cont];
-   
-   
    
 endmodule
+
+
+
+
+
+
+
+
+
+
+
 
  
