@@ -75,6 +75,7 @@ module UART_TX
         
         STATE_START_BIT:
         begin
+            data_index <= 0;
             if(tick_counter == 7)
              begin
                 if(tx_data == 1'b0) //Start bit still low
@@ -112,7 +113,7 @@ module UART_TX
                  end
                 else
                  begin
-                        data_index <= 0;
+                        data_index <= 0;                
                         next_state <= STATE_STOP_BIT;
                  end
              end
@@ -120,6 +121,7 @@ module UART_TX
         
         STATE_STOP_BIT:
         begin
+            data_index <= 0;
             if(tick_counter < 15)
              begin
                 tick_counter <= tick_counter + 1;
@@ -134,6 +136,7 @@ module UART_TX
               
         default:
         begin
+            data_index <= 0;        
             tick_counter <= 0;
             next_state <= STATE_IDLE;
         end

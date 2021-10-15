@@ -27,6 +27,7 @@ module UART_RX
   (
   //INPUTS
    input        i_clock,
+   input        i_tick,
    input        i_reset,
    input        i_rx_data_input,
    //OUTPUTS
@@ -52,6 +53,7 @@ module UART_RX
   
 
    assign  o_done_bit  =  done_bit;
+   assign  o_data_byte = data_byte;
    
    always @(posedge i_clock) //Incoming data
      rx_data  <=  i_rx_data_input;
@@ -82,6 +84,8 @@ module UART_RX
         
         STATE_START_BIT:
         begin
+          if(i_tick)
+          begin
             if(tick_counter == 7)
              begin
                 if(rx_data == 1'b0) //Start bit still low
@@ -103,10 +107,13 @@ module UART_RX
                 data_index <= 0;
                 next_state <= STATE_START_BIT;
              end
+           end
         end
         
         STATE_RECEIVING:
         begin
+          if(i_tick)
+           begin
             if(tick_counter < 15)
              begin
                 tick_counter <= tick_counter + 1;
@@ -128,10 +135,13 @@ module UART_RX
                     next_state <= STATE_STOP_BIT;
                  end
              end
+            end
         end
         
         STATE_STOP_BIT:
         begin
+          if(i_tick)
+           begin
             if(tick_counter < 15)
              begin
                 tick_counter <= tick_counter + 1;
@@ -144,6 +154,7 @@ module UART_RX
                 data_index <= 0;
                 next_state <= STATE_IDLE;
              end
+           end
         end
               
         default:
