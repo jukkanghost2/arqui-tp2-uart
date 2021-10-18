@@ -35,7 +35,9 @@ module prueba_rx_tb;
  
    // duration for each bit = 10 * timescale = 10 * 1 ns  = 10ns
   localparam                        period = 200;
-
+  localparam                        demora = 52000; //hay que ver el calculo del valor en serio
+  localparam     [7:0]              byte_to_rx = 8'b10101010; 
+  integer data_index = 0;
   
   BR_GENERATOR br_test (
     .i_clock           (i_clock),
@@ -59,31 +61,29 @@ module prueba_rx_tb;
             i_clock = 1'b0;
             i_tick  = 1'b0;
             i_rx_data_input = 1'b1;
-            i_reset = 1'b0;
+            i_reset = 1'b1;
 		    #20
-		    i_reset = 1'b1;
-		    #320000
-		    i_rx_data_input = 1'b0; ////START
-		    #320000
-		    i_rx_data_input = 1'b1;
-		    #320000
-		    i_rx_data_input = 1'b1;
-		    #320000
-		    i_rx_data_input = 1'b1;
-		    #320000
-		    i_rx_data_input = 1'b1;
-		    #320000
-		    i_rx_data_input = 1'b1;
-		    #320000
-		    i_rx_data_input = 1'b1;
-		    #320000
-		    i_rx_data_input = 1'b1;
-		    #320000
-		    i_rx_data_input = 1'b1;
-		    #320000
-		    i_rx_data_input = 1'b1; ///////////STOP
-		    #320000
+		    i_reset = 1'b0;
+		    #demora
+
+            i_rx_data_input = 1'b0; ////START
+		    #demora
 		    
+            for(data_index = 0; data_index <8; data_index = data_index +1)
+            begin
+                i_rx_data_input <= byte_to_rx[data_index];
+                $display(byte_to_rx[data_index]);
+                #demora;
+            end
+            
+             i_rx_data_input = 1'b1; ///////////STOP
+		    #demora
+            
+		    $display("recibido %b \n", o_data_byte);
+		    if(o_data_byte == byte_to_rx)
+		      $display("correct");
+		    else
+		      $display("failed");
 		    $finish;
      end
              
