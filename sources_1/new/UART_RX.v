@@ -36,20 +36,20 @@ module UART_RX
    );
    
   // One-Hot, One-Cold  
-  localparam STATE_IDLE         = 4'b0001;
-  localparam STATE_START_BIT    = 4'b0010;
-  localparam STATE_RECEIVING    = 4'b0100;
-  localparam STATE_STOP_BIT     = 4'b1000;
-   
-  reg           rx_data_r = 1'b1;
-  reg           rx_data   = 1'b1;
-   
+  localparam STATE_IDLE         = 5'b00001;
+  localparam STATE_START_BIT    = 5'b00010;
+  localparam STATE_RECEIVING    = 5'b00100;
+  localparam STATE_STOP_BIT     = 5'b01000;
+  localparam STATE_DONE         = 5'b10000;
+
+  
+  reg           rx_data   = 1'b1; 
   reg [7:0]     tick_counter  = 0;
   reg [2:0]     data_index     = 0; //8 bits total
   reg [7:0]     data_byte      = 0;
   reg           done_bit       = 0;
-  reg [3:0]     current_state  = 0;
-  reg [3:0]     next_state     = 0;
+  reg [4:0]     current_state  = 0;
+  reg [4:0]     next_state     = 0;
   
 
    assign  o_done_bit  =  done_bit;
@@ -58,76 +58,63 @@ module UART_RX
    always @(posedge i_clock) //Incoming data
      rx_data  <=  i_rx_data_input;
      
-//      // Purpose: Double-register the incoming data.
-//  // This allows it to be used in the UART RX Clock Domain.
-//  // (It removes problems caused by metastability)
-//  always @(posedge i_clock)
-//    begin
-//      rx_data_r <= i_rx_data_input;
-//      rx_data   <= rx_data_r;
-//    end
-
    
    always @(posedge i_clock) //MEMORIA
     if (i_reset) current_state <= STATE_IDLE; //ESTADO INICIAL
     else         current_state <= next_state; 
    
    
-   always @(i_tick) begin: next_state_logic
+   always @(posedge i_clock) begin: next_state_logic
     case (current_state)
         STATE_IDLE:
         begin      
-//                            $display("state idle\n");  
+            $display("state idle\n");  
             data_index <= 0;    
             tick_counter <= 0;
             if(rx_data == 1'b0) //Start bit detected
              begin
-//                data_index <= 0;
                 next_state <= STATE_START_BIT;
              end
             else
              begin
-//                data_index <= 0;
                 next_state <= STATE_IDLE;
              end
         end
         
         STATE_START_BIT:
         begin
-//                                    $display("state start\n");  
-//          if(i_tick)
-//          begin
+          $display("state start\n");  
+          if(i_tick)
+          begin
             if(tick_counter == 7)
              begin
                 if(rx_data == 1'b0) //Start bit still low
                 begin
                     tick_counter <= 0; //(found middle, reset counter)
-//                    data_index <= 0;
                     next_state <= STATE_RECEIVING;
                 end
                 else
                 begin
                     tick_counter <= 0;
-//                    data_index <= 0;
                     next_state <= STATE_IDLE;
                 end
              end
             else
              begin
                 tick_counter <= tick_counter + 1;
-//                data_index <= 0;
                 next_state <= STATE_START_BIT;
              end
-//           end
+           end
         end
         
         STATE_RECEIVING:
         begin
-//              $display("state receive\n");  
-//          if(i_tick)
-//           begin
+          $display("state receive\n");  
+          if(i_tick)
+           begin
             if(tick_counter < 15)
              begin
+                $display("tick %d\n", tick_counter);
                 tick_counter <= tick_counter + 1;
                 next_state <= STATE_RECEIVING;
              end
@@ -135,7 +122,7 @@ module UART_RX
              begin
                 tick_counter <= 0;
                 data_byte[data_index] <= rx_data;
-                $display("receive %d bits\n", data_index);
+                $display("receive %d bits \n data_byte[data_index]:%d\n", data_index, rx_data);
                 if(data_index < 7)
                  begin  
                         data_index <= data_index + 1;
@@ -147,15 +134,14 @@ module UART_RX
                     next_state <= STATE_STOP_BIT;
                  end
              end
-//            end
+            end
         end
         
         STATE_STOP_BIT:
         begin
-//                                            $display("state stop\n");  
-
-//          if(i_tick)
-//           begin
+           $display("state stop\n");  
+          if(i_tick)
+           begin
             if(tick_counter < 15)
              begin
                 tick_counter <= tick_counter + 1;
@@ -166,11 +152,19 @@ module UART_RX
              begin
                 tick_counter <= 0;
                 data_index <= 0;
-                next_state <= STATE_IDLE;
+                next_state <= STATE_DONE;
              end
-//           end
+           end
         end
-              
+        
+        STATE_DONE:
+        begin
+//         $display("state done\n");  
+           tick_counter <= 0;
+           data_index <= 0;
+           next_state <= STATE_IDLE;
+        end
+        
         default:
         begin
             tick_counter <= 0;
@@ -200,9 +194,13 @@ module UART_RX
         
         STATE_STOP_BIT:
         begin
-            done_bit <= 1'b1;
+            done_bit <= 1'b0;
         end
         
+        STATE_DONE:
+        begin
+            done_bit <= 1'b1;        
+        end
         
         default:
         begin
