@@ -37,19 +37,20 @@ module UART_TX
    );
    
   // One-Hot, One-Cold  
-  localparam STATE_IDLE         = 4'b0001;
-  localparam STATE_START_BIT    = 4'b0010;
-  localparam STATE_TRANSMITTING = 4'b0100;
-  localparam STATE_STOP_BIT     = 4'b1000;
+  localparam STATE_IDLE         = 5'b00001;
+  localparam STATE_START_BIT    = 5'b00010;
+  localparam STATE_TRANSMITTING = 5'b00100;
+  localparam STATE_STOP_BIT     = 5'b01000;
+  localparam STATE_DONE         = 5'b10000;
    
   reg           tx_active   = 1'b1;
-   
+  reg           tx_data     = 1'b0;
   reg [7:0]     tick_counter  = 0;
   reg [2:0]     data_index     = 0; //8 bits total
   reg [7:0]     data_byte      = 0;
   reg           done_bit       = 0;
-  reg [3:0]     current_state  = 0;
-  reg [3:0]     next_state     = 0;
+  reg [4:0]     current_state  = 0;
+  reg [4:0]     next_state     = 0;
 
    assign  o_done_bit  =  done_bit;
    assign  o_tx_active   =  tx_active;
@@ -60,7 +61,7 @@ module UART_TX
     else         current_state <= next_state; 
    
    
-   always @(i_tick) begin: next_state_logic
+   always @(posedge i_clock) begin: next_state_logic
     case (current_state)
         STATE_IDLE:
         begin
@@ -78,8 +79,10 @@ module UART_TX
         
         STATE_START_BIT:
         begin
+        if(i_tick)
+        begin
             $display("start");
-            o_tx_data <= 1'b0; // Send start bit
+//            o_tx_data <= 1'b0; // Send start bit
             if(tick_counter < 15)
             begin
                  tick_counter <= tick_counter +1; 
@@ -91,10 +94,13 @@ module UART_TX
                  next_state <= STATE_TRANSMITTING;
             end
         end
+        end
         
         STATE_TRANSMITTING:
         begin
-            o_tx_data <= data_byte[data_index];
+        if(i_tick)
+        begin
+            tx_data <= data_byte[data_index];
             if(tick_counter < 15)
              begin
                 tick_counter <= tick_counter + 1;
@@ -117,11 +123,14 @@ module UART_TX
                  end
              end
         end
+        end
         
         STATE_STOP_BIT:
         begin
+        if(i_tick)
+        begin
             $display("stop");
-            o_tx_data <= 1'b1; // Send Stop bit
+//            o_tx_data <= 1'b1; // Send Stop bit
             if(tick_counter < 15)
              begin
                 tick_counter <= tick_counter + 1;
@@ -130,8 +139,17 @@ module UART_TX
             else
              begin
                 tick_counter <= 0;
-                next_state <= STATE_IDLE;
+                next_state <= STATE_DONE;
              end
+        end
+        end
+        
+        STATE_DONE:
+        begin
+//         $display("state done\n");  
+           tick_counter <= 0;
+           data_index <= 0;
+           next_state <= STATE_IDLE;
         end
               
         default:
@@ -149,31 +167,42 @@ module UART_TX
         case (current_state)
         STATE_IDLE:
         begin
+            o_tx_data <= 1'b0;
             tx_active <= 1'b0;
             done_bit <= 1'b0;
         end
         
         STATE_START_BIT:
         begin
+             o_tx_data <= 1'b0;        
              tx_active <= 1'b1;
              done_bit <= 1'b0;
         end
         
         STATE_TRANSMITTING:
         begin
+             o_tx_data <= tx_data;
              tx_active <= 1'b1;
              done_bit <= 1'b0;
         end
         
         STATE_STOP_BIT:
         begin
+             o_tx_data <= 1'b1;        
+            tx_active <= 1'b1;
+            done_bit <= 1'b0;
+        end
+        
+        STATE_DONE:
+        begin
+            o_tx_data <= 1'b0;        
             tx_active <= 1'b0;
             done_bit <= 1'b1;
         end
         
-        
         default:
         begin
+             o_tx_data <= 1'b0;        
              tx_active <= 1'b0;
              done_bit <= 1'b0;
         end
