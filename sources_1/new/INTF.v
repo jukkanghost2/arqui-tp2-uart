@@ -56,8 +56,25 @@ module INTF
   reg [SIZEDATA - 1:0] result;
   
    always @(posedge i_clock) //MEMORIA
-    if (i_reset) current_state <= STATE_OPA; //ESTADO INICIAL
-    else         current_state <= next_state;
+    begin
+        if (i_reset)
+            begin
+                current_state <= STATE_OPA; //ESTADO INICIAL
+                o_alu_datoa <= 0;
+                o_alu_datob <= 0;
+                o_alu_opcode <= 0;
+                o_tx_result <= 0;
+            end
+        else
+            begin
+                current_state <= next_state;
+                o_alu_datoa <= operando_a;
+                o_alu_datob <= operando_b;
+                o_alu_opcode <= opcode;
+                o_tx_result <= result;
+            end
+    end
+    
   
   
   always @(*) begin: next_state_logic
@@ -66,7 +83,6 @@ module INTF
         begin
             if(i_rx_done)
             begin
-                operando_a <= i_rx_data;
                 next_state <= STATE_OPB;
             end
             else
@@ -79,7 +95,6 @@ module INTF
         begin
            if(i_rx_done)
             begin
-                operando_b <= i_rx_data;
                 next_state <= STATE_OPCODE;
             end
             else
@@ -92,7 +107,6 @@ module INTF
         begin
             if(i_rx_done)
             begin
-                opcode <= i_rx_data;
                 next_state <= STATE_RESULT;
             end
             else
@@ -103,7 +117,6 @@ module INTF
         
         STATE_RESULT:
         begin
-            result <= i_alu_result;
             next_state <= STATE_OPA;
         end
               
@@ -118,27 +131,43 @@ module INTF
         case (current_state)
         STATE_OPA:
         begin
-            o_alu_datoa <= operando_a;
+            operando_a = i_rx_data;
+            operando_b = o_alu_datob;
+            opcode = o_alu_opcode;
+            result = o_tx_result;
         end
         
         STATE_OPB:
         begin
-            o_alu_datob <= operando_b;
+            operando_b = i_rx_data;
+            operando_a = o_alu_datoa;
+            opcode = o_alu_opcode;
+            result = o_tx_result;
         end
         
         STATE_OPCODE:
         begin
-            o_alu_opcode <= opcode;
+            opcode = i_rx_data;
+            operando_a = o_alu_datoa;
+            operando_b = o_alu_datob;
+            result = o_tx_result;
         end
         
         STATE_RESULT:
         begin
-            o_tx_result <= result;
+            result = i_alu_result;
+            operando_a = o_alu_datoa;
+            operando_b = o_alu_datob;
+            opcode = o_alu_opcode;
         end
               
         default:
-           o_tx_result <= 0;
-
+            begin
+               operando_a = 0;
+               operando_b = 0;
+               opcode = 0;
+               result = 0;
+            end
     endcase        
     end
   
