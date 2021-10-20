@@ -37,7 +37,7 @@ module prueba_tx;
  
    // duration for each bit = 10 * timescale = 10 * 1 ns  = 10ns
   localparam                        period = 200;
-  localparam                        demora = 52000; //hay que ver el calculo del valor en serio
+  localparam                        demora = 104167; //(1/baudrate)
   reg    [7:0]              byte_from_tx = 0; 
   integer data_index = 0;
   
