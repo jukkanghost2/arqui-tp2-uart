@@ -64,7 +64,7 @@ module uart_tb;
   
     // duration for each bit = 10 * timescale = 10 * 1 ns  = 10ns
   localparam                        period = 200;
-  localparam                        demora = 52000; //hay que ver el calculo del valor en serio
+  localparam                        demora = 104167; //hay que ver el calculo del valor en serio
   integer data_index = 0;
 
   
@@ -87,7 +87,7 @@ module uart_tb;
 
             i_tx_signal = 1'b1; 
             i_data_byte <= 8'b10101010;
-		    #demora
+		    #10000
 		    i_tx_signal = 1'b0; 
 
 		    #demora		    
@@ -96,7 +96,8 @@ module uart_tb;
                     #demora;
                 end
             #demora
-            $display(o_data_byte);          
+            #demora
+            $display("%b\n", o_data_byte);          
 		    if(o_data_byte == 8'b10101010)
 		      $display("correct");
 		    else
