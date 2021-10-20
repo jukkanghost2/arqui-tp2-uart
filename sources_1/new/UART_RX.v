@@ -68,7 +68,7 @@ module UART_RX
     case (current_state)
         STATE_IDLE:
         begin      
-            $display("state idle\n");  
+//            $display("state idle\n");  
             data_index <= 0;    
             tick_counter <= 0;
             if(rx_data == 1'b0) //Start bit detected
@@ -83,7 +83,7 @@ module UART_RX
         
         STATE_START_BIT:
         begin
-          $display("state start\n");  
+//          $display("state start\n");  
           if(i_tick)
           begin
             if(tick_counter == 7)
@@ -109,12 +109,12 @@ module UART_RX
         
         STATE_RECEIVING:
         begin
-          $display("state receive\n");  
+//          $display("state receive\n");  
           if(i_tick)
            begin
             if(tick_counter < 15)
              begin
-                $display("tick %d\n", tick_counter);
+//                $display("tick %d\n", tick_counter);
                 tick_counter <= tick_counter + 1;
                 next_state <= STATE_RECEIVING;
              end
@@ -122,7 +122,7 @@ module UART_RX
              begin
                 tick_counter <= 0;
                 data_byte[data_index] <= rx_data;
-                $display("receive %d bits \n data_byte[data_index]:%d\n", data_index, rx_data);
+//                $display("receive %d bits \n data_byte[data_index]:%d\n", data_index, rx_data);
                 if(data_index < 7)
                  begin  
                         data_index <= data_index + 1;
@@ -139,7 +139,7 @@ module UART_RX
         
         STATE_STOP_BIT:
         begin
-           $display("state stop\n");  
+//           $display("state stop\n");  
           if(i_tick)
            begin
             if(tick_counter < 15)
@@ -150,9 +150,18 @@ module UART_RX
              end
             else
              begin
-                tick_counter <= 0;
-                data_index <= 0;
-                next_state <= STATE_DONE;
+                if(rx_data == 1'b1) //Stop bit 
+                begin
+                    tick_counter <= 0;
+                    data_index <= 0;
+                    next_state <= STATE_DONE;
+                end
+                else
+                begin
+                    tick_counter <= 0;
+                    data_index <= 0;
+                    next_state <= STATE_IDLE;
+                end
              end
            end
         end

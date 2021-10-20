@@ -71,6 +71,7 @@ module UART_TX
             begin
             $display("señal");
                 data_byte <= i_data_byte;
+//                            $display(data_byte);
                 next_state <= STATE_START_BIT;
             end
             else
@@ -167,7 +168,7 @@ module UART_TX
         case (current_state)
         STATE_IDLE:
         begin
-            o_tx_data <= 1'b0;
+            o_tx_data <= 1'b1;
             tx_active <= 1'b0;
             done_bit <= 1'b0;
         end
@@ -188,21 +189,21 @@ module UART_TX
         
         STATE_STOP_BIT:
         begin
-             o_tx_data <= 1'b1;        
+            o_tx_data <= 1'b1;        
             tx_active <= 1'b1;
             done_bit <= 1'b0;
         end
         
         STATE_DONE:
         begin
-            o_tx_data <= 1'b0;        
+            o_tx_data <= 1'b1;        
             tx_active <= 1'b0;
             done_bit <= 1'b1;
         end
         
         default:
         begin
-             o_tx_data <= 1'b0;        
+             o_tx_data <= 1'b1;        
              tx_active <= 1'b0;
              done_bit <= 1'b0;
         end

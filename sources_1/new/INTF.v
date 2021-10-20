@@ -38,7 +38,8 @@ module INTF
   output  reg   [SIZEDATA - 1:0]   o_alu_datoa,
   output  reg   [SIZEDATA - 1:0]   o_alu_datob,
   output  reg   [SIZEDATA - 1:0]   o_alu_opcode,
-  output  reg   [SIZEDATA - 1:0]   o_tx_result
+  output  reg   [SIZEDATA - 1:0]   o_tx_result,
+  output  reg                      o_tx_signal
   );
   
   // One-Hot, One-Cold  
@@ -60,29 +61,38 @@ module INTF
         if (i_reset)
             begin
                 current_state <= STATE_OPA; //ESTADO INICIAL
-                o_alu_datoa <= 0;
-                o_alu_datob <= 0;
-                o_alu_opcode <= 0;
-                o_tx_result <= 0;
+//                o_alu_datoa <= 0;
+//                o_alu_datob <= 0;
+//                o_alu_opcode <= 0;
+//                o_tx_result <= 0;
             end
         else
             begin
                 current_state <= next_state;
-                o_alu_datoa <= operando_a;
-                o_alu_datob <= operando_b;
-                o_alu_opcode <= opcode;
-                o_tx_result <= result;
+//                o_alu_datoa <= operando_a;
+//                o_alu_datob <= operando_b;
+//                o_alu_opcode <= opcode;
+//                o_tx_result <= result;
             end
     end
     
   
   
-  always @(*) begin: next_state_logic
+  always @(posedge i_clock) begin: next_state_logic
     case (current_state)
         STATE_OPA:
         begin
             if(i_rx_done)
             begin
+            $display("state a\n");
+                operando_a <= i_rx_data;
+                operando_b <= o_alu_datob;
+                opcode <= o_alu_opcode;
+                result <= o_tx_result;
+                            $display("i_rx_data %d\n", i_rx_data);
+                $display("operandoa %d\n", operando_a);            
+            $display("operandob %d\n", operando_b);            
+            $display("opcode %d\n", opcode);        
                 next_state <= STATE_OPB;
             end
             else
@@ -95,6 +105,16 @@ module INTF
         begin
            if(i_rx_done)
             begin
+                $display("state b\n");
+                operando_a <= o_alu_datoa;
+                operando_b <= i_rx_data;
+                opcode <= o_alu_opcode;
+                result <= o_tx_result;
+                                            $display("i_rx_data %d\n", i_rx_data);
+
+                $display("operandoa %d\n", operando_a);            
+            $display("operandob %d\n", operando_b);            
+            $display("opcode %d\n", opcode);        
                 next_state <= STATE_OPCODE;
             end
             else
@@ -107,6 +127,16 @@ module INTF
         begin
             if(i_rx_done)
             begin
+            $display("state opcode\n");            
+                operando_a <= o_alu_datoa;
+                operando_b <= o_alu_datob;
+                opcode <= i_rx_data;
+                result <= o_tx_result;
+                                            $display("i_rx_data %d\n", i_rx_data);
+
+            $display("operandoa %d\n", operando_a);            
+            $display("operandob %d\n", operando_b);            
+            $display("opcode %d\n", opcode);            
                 next_state <= STATE_RESULT;
             end
             else
@@ -117,11 +147,21 @@ module INTF
         
         STATE_RESULT:
         begin
+                operando_a <= o_alu_datoa;
+                operando_b <= o_alu_datob;
+                opcode <= o_alu_opcode;
+                result <= i_alu_result;
             next_state <= STATE_OPA;
         end
               
         default:
+        begin
+                operando_a <= 0;
+                operando_b <= 0;
+                opcode <= 0;
+                result <= 0;
             next_state <= STATE_OPA;
+        end
         
     endcase
     end
@@ -131,42 +171,47 @@ module INTF
         case (current_state)
         STATE_OPA:
         begin
-            operando_a = i_rx_data;
-            operando_b = o_alu_datob;
-            opcode = o_alu_opcode;
-            result = o_tx_result;
+              o_alu_datoa <= operando_a;
+              o_alu_datob <= operando_b;
+              o_alu_opcode <= opcode;
+              o_tx_result <= result;
+              o_tx_signal <= 0;
         end
         
         STATE_OPB:
         begin
-            operando_b = i_rx_data;
-            operando_a = o_alu_datoa;
-            opcode = o_alu_opcode;
-            result = o_tx_result;
+              o_alu_datoa <= operando_a;
+              o_alu_datob <= operando_b;
+              o_alu_opcode <= opcode;
+              o_tx_result <= result;
+              o_tx_signal <= 0;
         end
         
         STATE_OPCODE:
         begin
-            opcode = i_rx_data;
-            operando_a = o_alu_datoa;
-            operando_b = o_alu_datob;
-            result = o_tx_result;
+               o_alu_datoa <= operando_a;
+              o_alu_datob <= operando_b;
+              o_alu_opcode <= opcode;
+              o_tx_result <= result;
+              o_tx_signal <= 0;
         end
         
         STATE_RESULT:
         begin
-            result = i_alu_result;
-            operando_a = o_alu_datoa;
-            operando_b = o_alu_datob;
-            opcode = o_alu_opcode;
+              o_alu_datoa <= operando_a;
+              o_alu_datob <= operando_b;
+              o_alu_opcode <= opcode;
+              o_tx_result <= result;
+              o_tx_signal <= 1;
         end
               
         default:
             begin
-               operando_a = 0;
-               operando_b = 0;
-               opcode = 0;
-               result = 0;
+              o_alu_datoa <= 0;
+              o_alu_datob <= 0;
+              o_alu_opcode <= 0;
+              o_tx_result <= 0;
+              o_tx_signal <= 0;
             end
     endcase        
     end

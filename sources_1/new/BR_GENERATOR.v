@@ -33,13 +33,13 @@ module BR_GENERATOR
    //OUTPUTS
    output     reg o_tick
    );
-   
   localparam integer modulo = (clk_frec*1000000) / (baudrate * 16);
   reg [ $clog2 (modulo) - 1:0] contador;
   
   
   always @(posedge i_clock)
   begin
+//  $display("modulo %d y clog %d\n", modulo, $clog2 (modulo));
     if(contador < modulo)
         begin
             o_tick <= 0;
