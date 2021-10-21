@@ -32,7 +32,8 @@ module TOP
    input        i_reset,
    input        i_tx,
    //OUTPUTS
-   output       o_rx
+   output       o_rx,
+   output       o_tx_done
    );
     
     // Wires.
@@ -42,7 +43,6 @@ module TOP
     wire [SIZEDATA - 1 : 0]    result;
     wire [SIZEDATA - 1 : 0]    rx_data_byte;
     wire [SIZEDATA - 1 : 0]    tx_data_byte;
-    wire                       tx_done;
     wire                       rx_done;
     wire                       tx_signal;    
     wire                       ticks;
@@ -54,11 +54,6 @@ module TOP
     .o_result       (result)
     );
     
-      BR_GENERATOR u_br_gen 
-  (
-    .i_clock           (i_clock),
-    .o_tick            (ticks)    
-  );
   
    INTF u_intf (
     .i_clock         (i_clock),
@@ -73,24 +68,17 @@ module TOP
     .o_tx_signal     (tx_signal)
     );
     
-  UART_RX u_rx (
-    .i_clock           (i_clock),
-    .i_tick            (ticks),
-    .i_reset           (i_reset),
-    .i_rx_data_input   (i_tx), 
-    .o_done_bit        (rx_done), 
-    .o_data_byte       (rx_data_byte)
-  );
-  
-    UART_TX u_tx (
-    .i_clock           (i_clock),
-    .i_tick            (ticks),
-    .i_reset           (i_reset),
-    .i_data_byte       (tx_data_byte),
-    .i_tx_signal       (tx_signal), 
-    .o_done_bit        (tx_done), 
-    .o_tx_data         (o_rx)
-  );
-
+    UART u_uart (
+    .i_clock         (i_clock),
+    .i_reset         (i_reset),
+    .i_rx_data       (i_tx),
+    .o_tx_data       (o_rx),
+    .i_tx_signal     (tx_signal),
+    .i_tx_result     (tx_data_byte),
+    .o_rx_done       (rx_done),
+    .o_rx_data       (rx_data_byte),
+    .o_tx_done       (o_tx_done)
+    );
+   
     
 endmodule
