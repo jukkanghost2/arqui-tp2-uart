@@ -64,10 +64,10 @@ module top_test;
         // duration for each bit = 10 * timescale = 10 * 1 ns  = 10ns
   localparam                        period = 200;
   localparam                        demora = 104167; //(1/baudrate)
-  reg    [SIZEDATA - 1:0]                    operando1;
-  reg    [SIZEDATA - 1:0]                    operando2;
-  reg    [SIZEDATA - 1:0]                    opcode;
-  reg    [SIZEDATA - 1:0]                    result;
+  reg signed    [SIZEDATA - 1:0]                    operando1;
+  reg signed    [SIZEDATA - 1:0]                    operando2;
+  reg           [SIZEDATA - 1:0]                    opcode;
+  reg signed    [SIZEDATA - 1:0]                    result;
   localparam [SIZEOP - 1:0]     ADD = 6'b100000;
   localparam [SIZEOP - 1:0]     SUB = 6'b100010;
   localparam [SIZEOP - 1:0]     OR  = 6'b100101;
@@ -77,7 +77,8 @@ module top_test;
   localparam [SIZEOP - 1:0]     SRA = 6'b000011;
   localparam [SIZEOP - 1:0]     SRL = 6'b000010;
   integer index = 0;
-   
+  integer flag = 1;
+  
   initial
     begin        
             OPS[0] <= ADD;
@@ -89,64 +90,129 @@ module top_test;
             OPS[6] <= SRA;
             OPS[7] <= SRL;
             
-    
-    
             i_clock = 1'b0;
             i_tx_signal = 1'b0;
             i_reset = 1'b1;
 		    #20
 		    i_reset = 1'b0;
 		    #(demora)
-for(index = 0; index <N_OPS; index = index + 1)
-begin
-            tx_data_byte <= 8'b0000100;           
-            #period operando1 <= tx_data_byte;
-            i_tx_signal = 1'b1; 
-
-		    #10000
-		    i_tx_signal = 1'b0; 
-
-		    #(demora*10)		    
-
-            #demora
-            tx_data_byte <= 8'b0001000;           
-            #period operando2 <= tx_data_byte;
-            i_tx_signal = 1'b1; 
-		    #10000
-		    i_tx_signal = 1'b0; 
-
-		    #(demora*10)	    
-
-            #demora
-            tx_data_byte <= OPS[index];
-            #period opcode <= tx_data_byte; 
-            i_tx_signal = 1'b1; 
-		    #10000
-		    i_tx_signal = 1'b0; 
-
-		    #(demora*10)	    
-
-            #(demora*10)	  
-            #period result <= rx_data_byte;
-            #demora
-            #demora;
+		    
+            for(index = 0; index <N_OPS; index = index + 1)
+            begin
+                        tx_data_byte <= $random;           
+                        #period operando1 <= tx_data_byte;
+                        i_tx_signal = 1'b1;             
+                        #10000
+                        i_tx_signal = 1'b0; 
             
-            case(index)
-		          0: if((operando1 + operando2) != result) $display("%d %d %d %d error en suma", operando1, operando2, result, operando1 + operando2);
-		          1: if((operando1 - operando2) != result) $display("%d %d %d %d error en resta", operando1, operando2, result, operando1 - operando2);
-		          2: if((operando1 | operando2) != result) $display("%b %b %b %b error en or", operando1, operando2, result, operando1 | operando2);
-		          3: if((operando1 ^ operando2) != result) $display("%b %b %b %b error en xor", operando1, operando2, result, operando1 ^ operando2);
-		          4: if((operando1 & operando2) != result) $display("%b %b %b %b error en and", operando1, operando2, result, operando1 & operando2);
-		          5: if(~(operando1 | operando2) != result) $display("%b %b %b %b error en nor", operando1, operando2, result, ~(operando1 | operando2));
-		          6: if((operando1 >>> operando2) != result) $display("%b %b %b %b error en sra", operando1, operando2, result, operando1 >>> operando2);
-		          7: if((operando1 >> operando2) != result) $display("%b %b %b %b error en srl", operando1, operando2, result, operando1 >> operando2);
-            endcase
-         end                 
-         $finish;
-
+                        #(demora*10)	
+                        #demora
+                        
+                        tx_data_byte <= $random;  
+                        if(index > 5) tx_data_byte <= 3;         
+                        #period operando2 <= tx_data_byte;
+                        i_tx_signal = 1'b1; 
+                        #10000
+                        i_tx_signal = 1'b0; 
+            
+                        #(demora*10)  
+                        #demora
+                        
+                        tx_data_byte <= OPS[index];
+                        #period opcode <= tx_data_byte; 
+                        i_tx_signal = 1'b1; 
+                        #10000
+                        i_tx_signal = 1'b0; 
+            
+                        #(demora*10)
+                        #demora
+                        
+                        case(index)
+                              0: 
+                                    begin
+                                        if((operando1 + operando2) != result)
+                                            begin
+                                                $display("op1 %b op2 %b obtenido %b esperado %b error en suma", operando1, operando2, result, operando1 + operando2);
+                                                flag = 0;
+                                            end
+                                        else $display("SUMA OK");
+                                    end
+                              1:
+                                    begin
+                                        if((operando1 - operando2) != result)
+                                            begin
+                                                $display("op1 %b op2 %b obtenido %b esperado %b error en resta", operando1, operando2, result, operando1 - operando2);
+                                                flag = 0;
+                                            end
+                                        else $display("RESTA OK");
+                                    end
+                              2: 
+                                    begin
+                                        if((operando1 | operando2) != result)
+                                            begin
+                                                $display("op1 %b op2 %b obtenido %b esperado %b error en or", operando1, operando2, result, operando1 | operando2);
+                                                flag = 0;
+                                            end
+                                        else $display("OR OK");
+                                    end
+                              3: 
+                                    begin
+                                        if((operando1 ^ operando2) != result)
+                                            begin
+                                                $display("op1 %b op2 %b obtenido %b esperado %b error en xor", operando1, operando2, result, operando1 ^ operando2);
+                                                flag = 0;
+                                            end
+                                        else $display("XOR OK");
+                                    end
+                              4:
+                                    begin
+                                        if((operando1 & operando2) != result)
+                                            begin
+                                                $display("op1 %b op2 %b obtenido %b esperado %b error en and", operando1, operando2, result, operando1 & operando2);
+                                                flag = 0;
+                                            end
+                                        else $display("AND OK");
+                                    end
+                              5: 
+                                    begin
+                                        if(~(operando1 | operando2) != result)
+                                            begin
+                                                $display("op1 %b op2 %b obtenido %b esperado %b error en nor", operando1, operando2, result, ~(operando1 | operando2));
+                                                flag = 0;
+                                            end
+                                        else $display("NOR OK");
+                                    end
+                              6: 
+                                    begin
+                                        if((operando1 >>> operando2) != result)
+                                            begin
+                                                $display("op1 %b op2 %b obtenido %b esperado %b error en sra", operando1, operando2, result, operando1 >>> operando2);
+                                                flag = 0;
+                                            end
+                                        else $display("SRA OK");
+                                    end
+                              7: 
+                                    begin
+                                        if((operando1 >> operando2) != result)
+                                            begin
+                                                $display("op1 %b op2 %b obtenido %b esperado %b error en srl", operando1, operando2, result, operando1 >> operando2);
+                                                flag = 0;
+                                            end
+                                        else $display("SRL OK");
+                                    end
+                        endcase
+            end                 
+            
+            if(flag == 1) $display("Todos los test pasados");
+            else $display("Fallo algún test");
+            
+            $finish;
      end
 
-
+    always@(posedge o_rx_done)
+        begin                      
+            result <= rx_data_byte;            
+        end
              
     always #(period/2) i_clock = ~i_clock;
 
