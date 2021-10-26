@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ns / 100ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -21,19 +21,23 @@
 
 
 module top_test;
+  //PARAMETERS
+  parameter     SIZEDATA = 8;
+  parameter     SIZEOP = 6;
+  parameter     N_OPS = 8;
 
     //INPUTS
    reg           i_clock;
    reg           i_reset;
    wire           i_tx;
    reg           i_tx_signal;  
-   reg    [7:0]  tx_data_byte;
+   reg    [SIZEDATA - 1:0]  tx_data_byte;
 
    //OUTPUTS
    wire           o_rx;
    wire           o_tx_done;
    wire           o_rx_done;
-   wire  [7:0]    rx_data_byte;
+   wire  [SIZEDATA - 1:0]    rx_data_byte;
    
    TOP top_test (
     .i_clock    (i_clock),
@@ -43,7 +47,7 @@ module top_test;
     .o_tx_done  (o_tx_done)
    );
    
-   UART u_uart (
+   UART uart_test (
     .i_clock         (i_clock),
     .i_reset         (i_reset),
     .i_rx_data       (o_rx),
@@ -55,80 +59,94 @@ module top_test;
     .o_tx_done       (tx_done)
     );
     
+    reg [SIZEOP-1:0] OPS[0:N_OPS-1];
+    
         // duration for each bit = 10 * timescale = 10 * 1 ns  = 10ns
   localparam                        period = 200;
-  localparam                        demora = 104167; //hay que ver el calculo del valor en serio
-  integer data_index = 0;
+  localparam                        demora = 104167; //(1/baudrate)
+  reg    [SIZEDATA - 1:0]                    operando1;
+  reg    [SIZEDATA - 1:0]                    operando2;
+  reg    [SIZEDATA - 1:0]                    opcode;
+  reg    [SIZEDATA - 1:0]                    result;
+  localparam [SIZEOP - 1:0]     ADD = 6'b100000;
+  localparam [SIZEOP - 1:0]     SUB = 6'b100010;
+  localparam [SIZEOP - 1:0]     OR  = 6'b100101;
+  localparam [SIZEOP - 1:0]     XOR = 6'b100110;
+  localparam [SIZEOP - 1:0]     AND = 6'b100100;
+  localparam [SIZEOP - 1:0]     NOR = 6'b100111;
+  localparam [SIZEOP - 1:0]     SRA = 6'b000011;
+  localparam [SIZEOP - 1:0]     SRL = 6'b000010;
+  integer index = 0;
    
   initial
-    begin         
+    begin        
+            OPS[0] <= ADD;
+            OPS[1] <= SUB;
+            OPS[2] <= OR;
+            OPS[3] <= XOR;
+            OPS[4] <= AND;
+            OPS[5] <= NOR;
+            OPS[6] <= SRA;
+            OPS[7] <= SRL;
+            
+    
+    
             i_clock = 1'b0;
             i_tx_signal = 1'b0;
             i_reset = 1'b1;
 		    #20
 		    i_reset = 1'b0;
-		    #demora
-
+		    #(demora)
+for(index = 0; index <N_OPS; index = index + 1)
+begin
+            tx_data_byte <= 8'b0000100;           
+            #period operando1 <= tx_data_byte;
             i_tx_signal = 1'b1; 
-            tx_data_byte <= 8'b0000100;
+
 		    #10000
 		    i_tx_signal = 1'b0; 
 
 		    #(demora*10)		    
-//                for(data_index = 0; data_index <8; data_index = data_index +1)
-//                begin
-//                    #demora;
-//                end
+
             #demora
+            tx_data_byte <= 8'b0001000;           
+            #period operando2 <= tx_data_byte;
             i_tx_signal = 1'b1; 
-            tx_data_byte <= 8'b00000100;
 		    #10000
 		    i_tx_signal = 1'b0; 
 
 		    #(demora*10)	    
-//                for(data_index = 0; data_index <8; data_index = data_index +1)
-//                begin
-//                    #demora;
-//                end
-//            #demora
+
             #demora
+            tx_data_byte <= OPS[index];
+            #period opcode <= tx_data_byte; 
             i_tx_signal = 1'b1; 
-            tx_data_byte <= 8'b00100000;
 		    #10000
 		    i_tx_signal = 1'b0; 
 
 		    #(demora*10)	    
-//#demora		    
-//                for(data_index = 0; data_index <8; data_index = data_index +1)
-//                begin
-//                    #demora;
-//                end
-//            #demora
-            #(demora*50)	;    
-//            #demora		    
-//                for(data_index = 0; data_index <8; data_index = data_index +1)
-//                begin
-//                    #demora;
-//                end
-//            #demora
-//            #demora
-//            #demora
 
-		    
-		 
+            #(demora*10)	  
+            #period result <= rx_data_byte;
+            #demora
+            #demora;
+            
+            case(index)
+		          0: if((operando1 + operando2) != result) $display("%d %d %d %d error en suma", operando1, operando2, result, operando1 + operando2);
+		          1: if((operando1 - operando2) != result) $display("%d %d %d %d error en resta", operando1, operando2, result, operando1 - operando2);
+		          2: if((operando1 | operando2) != result) $display("%b %b %b %b error en or", operando1, operando2, result, operando1 | operando2);
+		          3: if((operando1 ^ operando2) != result) $display("%b %b %b %b error en xor", operando1, operando2, result, operando1 ^ operando2);
+		          4: if((operando1 & operando2) != result) $display("%b %b %b %b error en and", operando1, operando2, result, operando1 & operando2);
+		          5: if(~(operando1 | operando2) != result) $display("%b %b %b %b error en nor", operando1, operando2, result, ~(operando1 | operando2));
+		          6: if((operando1 >>> operando2) != result) $display("%b %b %b %b error en sra", operando1, operando2, result, operando1 >>> operando2);
+		          7: if((operando1 >> operando2) != result) $display("%b %b %b %b error en srl", operando1, operando2, result, operando1 >> operando2);
+            endcase
+         end                 
+         $finish;
+
      end
-     
-     always@(posedge o_rx_done)
-     begin
-   
-      $display("%b\n", rx_data_byte);          
-		    if(rx_data_byte == 8)
-		      $display("correct");
-		    else
-		      $display("failed");
-		      $finish;
-    
-     end
+
+
              
     always #(period/2) i_clock = ~i_clock;
 
