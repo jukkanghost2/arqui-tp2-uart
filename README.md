@@ -6,7 +6,8 @@ Segundo TP de arquitectura de computadoras: UART
 ### DESARROLLO
 
 
-#### MODULO ALU
+#### MODULO UART
+![ALU schematic](images/moduloUart)
 
 ---
 #### ALU "INTEGRADA"
