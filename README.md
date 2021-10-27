@@ -7,10 +7,13 @@ Segundo TP de arquitectura de computadoras: UART
 
 
 #### MODULO UART
+
 ![UART schematic](images/moduloUart.png)
 
 ---
-#### ALU "INTEGRADA"
+#### MODULO TOP
+
+![TOP schematic](images/moduloTop2.png)
 
 ---
 #### SIMULACION RTL
