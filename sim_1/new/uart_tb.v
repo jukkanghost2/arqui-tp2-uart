@@ -106,6 +106,4 @@ module uart_tb;
      end
              
      always #(period/2) i_clock = ~i_clock;
-
-
 endmodule

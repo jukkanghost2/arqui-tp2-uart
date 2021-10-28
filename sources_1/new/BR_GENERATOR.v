@@ -25,7 +25,6 @@ module BR_GENERATOR
   //PARAMETERS
   parameter clk_frec  = 5.0, // 5MHz
   parameter baudrate = 9600
-
   )
   (
   //INPUTS
@@ -33,13 +32,12 @@ module BR_GENERATOR
    //OUTPUTS
    output     reg o_tick
    );
+   
   localparam integer modulo = (clk_frec*1000000) / (baudrate * 16);
-  reg [ $clog2 (modulo) - 1:0] contador;
-  
+  reg [ $clog2 (modulo) - 1:0 ] contador;
   
   always @(posedge i_clock)
   begin
-//  $display("modulo %d y clog %d\n", modulo, $clog2 (modulo));
     if(contador < modulo)
         begin
             o_tick <= 0;
@@ -51,9 +49,6 @@ module BR_GENERATOR
             contador <= 0;
         end
   end      
-        
-
-   
 endmodule
 
 

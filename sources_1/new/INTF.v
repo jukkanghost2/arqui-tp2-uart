@@ -59,40 +59,21 @@ module INTF
    always @(posedge i_clock) //MEMORIA
     begin
         if (i_reset)
-            begin
-                current_state <= STATE_OPA; //ESTADO INICIAL
-//                o_alu_datoa <= 0;
-//                o_alu_datob <= 0;
-//                o_alu_opcode <= 0;
-//                o_tx_result <= 0;
-            end
+            current_state <= STATE_OPA; //ESTADO INICIAL
         else
-            begin
-                current_state <= next_state;
-//                o_alu_datoa <= operando_a;
-//                o_alu_datob <= operando_b;
-//                o_alu_opcode <= opcode;
-//                o_tx_result <= result;
-            end
+            current_state <= next_state;
     end
     
-  
-  
   always @(posedge i_clock) begin: next_state_logic
     case (current_state)
         STATE_OPA:
         begin
             if(i_rx_done)
             begin
-            $display("state a\n");
                 operando_a <= i_rx_data;
                 operando_b <= o_alu_datob;
                 opcode <= o_alu_opcode;
                 result <= o_tx_result;
-                            $display("i_rx_data %d\n", i_rx_data);
-                $display("operandoa %d\n", operando_a);            
-            $display("operandob %d\n", operando_b);            
-            $display("opcode %d\n", opcode);        
                 next_state <= STATE_OPB;
             end
             else
@@ -105,16 +86,10 @@ module INTF
         begin
            if(i_rx_done)
             begin
-                $display("state b\n");
                 operando_a <= o_alu_datoa;
                 operando_b <= i_rx_data;
                 opcode <= o_alu_opcode;
                 result <= o_tx_result;
-                                            $display("i_rx_data %d\n", i_rx_data);
-
-                $display("operandoa %d\n", operando_a);            
-            $display("operandob %d\n", operando_b);            
-            $display("opcode %d\n", opcode);        
                 next_state <= STATE_OPCODE;
             end
             else
@@ -127,16 +102,10 @@ module INTF
         begin
             if(i_rx_done)
             begin
-            $display("state opcode\n");            
                 operando_a <= o_alu_datoa;
                 operando_b <= o_alu_datob;
                 opcode <= i_rx_data;
                 result <= o_tx_result;
-                                            $display("i_rx_data %d\n", i_rx_data);
-
-            $display("operandoa %d\n", operando_a);            
-            $display("operandob %d\n", operando_b);            
-            $display("opcode %d\n", opcode);            
                 next_state <= STATE_RESULT;
             end
             else
@@ -151,7 +120,7 @@ module INTF
                 operando_b <= o_alu_datob;
                 opcode <= o_alu_opcode;
                 result <= i_alu_result;
-            next_state <= STATE_OPA;
+                next_state <= STATE_OPA;
         end
               
         default:
@@ -160,7 +129,7 @@ module INTF
                 operando_b <= 0;
                 opcode <= 0;
                 result <= 0;
-            next_state <= STATE_OPA;
+                next_state <= STATE_OPA;
         end
         
     endcase
@@ -215,5 +184,4 @@ module INTF
             end
     endcase        
     end
-  
 endmodule

@@ -55,11 +55,9 @@ module UART_TX
    assign  o_done_bit  =  done_bit;
    assign  o_tx_active   =  tx_active;
    
-   
    always @(posedge i_clock) //MEMORIA
     if (i_reset) current_state <= STATE_IDLE; //ESTADO INICIAL
     else         current_state <= next_state; 
-   
    
    always @(posedge i_clock) begin: next_state_logic
     case (current_state)
@@ -69,9 +67,7 @@ module UART_TX
             tick_counter <= 0;
             if(i_tx_signal == 1'b1)
             begin
-            $display("señal");
                 data_byte <= i_data_byte;
-//                            $display(data_byte);
                 next_state <= STATE_START_BIT;
             end
             else
@@ -82,8 +78,6 @@ module UART_TX
         begin
         if(i_tick)
         begin
-            $display("start");
-//            o_tx_data <= 1'b0; // Send start bit
             if(tick_counter < 15)
             begin
                  tick_counter <= tick_counter +1; 
@@ -110,7 +104,6 @@ module UART_TX
             else
              begin
                 tick_counter <= 0;
-                $display("bits transmitidos %d", data_index);
                            
                 if(data_index < 7)
                  begin
@@ -130,8 +123,6 @@ module UART_TX
         begin
         if(i_tick)
         begin
-            $display("stop");
-//            o_tx_data <= 1'b1; // Send Stop bit
             if(tick_counter < 15)
              begin
                 tick_counter <= tick_counter + 1;
@@ -147,7 +138,6 @@ module UART_TX
         
         STATE_DONE:
         begin
-//         $display("state done\n");  
            tick_counter <= 0;
            data_index <= 0;
            next_state <= STATE_IDLE;
@@ -207,12 +197,6 @@ module UART_TX
              tx_active <= 1'b0;
              done_bit <= 1'b0;
         end
-
-        
     endcase
-        
     end
-    
-    
 endmodule
-
