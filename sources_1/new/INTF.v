@@ -57,13 +57,13 @@ module INTF
   reg [SIZEDATA - 1:0] result;
   
    always @(posedge i_clock) //MEMORIA
-    begin
         if (i_reset)
-            current_state <= STATE_OPA; //ESTADO INICIAL
+                current_state <= STATE_OPA; //ESTADO INICIAL
         else
-            current_state <= next_state;
-    end
+                current_state <= next_state;
     
+  
+  
   always @(posedge i_clock) begin: next_state_logic
     case (current_state)
         STATE_OPA:
@@ -120,7 +120,7 @@ module INTF
                 operando_b <= o_alu_datob;
                 opcode <= o_alu_opcode;
                 result <= i_alu_result;
-                next_state <= STATE_OPA;
+            next_state <= STATE_OPA;
         end
               
         default:
@@ -129,7 +129,7 @@ module INTF
                 operando_b <= 0;
                 opcode <= 0;
                 result <= 0;
-                next_state <= STATE_OPA;
+            next_state <= STATE_OPA;
         end
         
     endcase
@@ -184,4 +184,5 @@ module INTF
             end
     endcase        
     end
+  
 endmodule

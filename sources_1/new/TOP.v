@@ -53,6 +53,7 @@ module TOP
     .i_opcode       (opcode),
     .o_result       (result)
     );
+    
   
    INTF u_intf (
     .i_clock         (i_clock),
@@ -78,4 +79,6 @@ module TOP
     .o_rx_data       (rx_data_byte),
     .o_tx_done       (o_tx_done)
     );
+   
+    
 endmodule

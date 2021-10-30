@@ -37,13 +37,16 @@ module UART
    output [SIZEDATA - 1:0]      o_rx_data,
    output                       o_tx_data,
    output                       o_tx_done
+
  );
+  
 
   BR_GENERATOR u_br_gen 
   (
     .i_clock           (i_clock),
     .o_tick            (ticks)    
   );
+  
   
    UART_RX u_rx (
     .i_clock           (i_clock),
@@ -63,4 +66,6 @@ module UART
     .o_done_bit        (o_tx_done), 
     .o_tx_data         (o_tx_data)
   );
+
+   
 endmodule
