@@ -91,7 +91,7 @@ module uart_tb;
 		    i_tx_signal = 1'b0; 
 
 		    #demora		    
-                for(data_index = 0; data_index <8; data_index = data_index +1)
+                for(data_index = 0; data_index <9; data_index = data_index +1)
                 begin
                     #demora;
                 end
@@ -106,4 +106,6 @@ module uart_tb;
      end
              
      always #(period/2) i_clock = ~i_clock;
+
+
 endmodule

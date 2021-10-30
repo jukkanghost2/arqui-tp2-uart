@@ -164,6 +164,8 @@ module prueba_todo;
                 #demora;
             end
             
+            i_rx_data_input = 1'b1; ///////////PARITY
+		    #demora
              i_rx_data_input = 1'b1; ///////////STOP
 		    #demora
 		    ////////////OPERANDO B
@@ -177,6 +179,8 @@ module prueba_todo;
                 #demora;
             end
             
+            i_rx_data_input = 1'b1; ///////////PARITY
+		    #demora
              i_rx_data_input = 1'b1; ///////////STOP
 		    #demora
 		    #demora
@@ -192,8 +196,9 @@ module prueba_todo;
                 #demora;
             end
             
-             i_rx_data_input = 1'b1; ///////////STOP
+            i_rx_data_input = 1'b1; ///////////PARITY
 		    #demora
+             i_rx_data_input = 1'b1; ///////////STOP
 		    #demora
 		    if(o_tx_data == 1'b0) //Start bit
             $display("start bit detectado");
@@ -206,6 +211,10 @@ module prueba_todo;
                     #demora;
                 end
             
+            if(o_tx_data == 1'b1) //PARITY bit
+              $display("parity bit detectado");
+		      #demora;
+		      
                if(o_tx_data == 1'b1) //STOP bit
               $display("stop bit detectado");
 		      #demora;

@@ -71,7 +71,7 @@ module prueba_tx;
 
             i_tx_signal = 1'b1; 
             i_data_byte <= 8'b10101010;
-		    #demora
+		    #400
 		    i_tx_signal = 1'b0; 
 		    if(o_tx_data == 1'b0) //Start bit
             $display("start bit detectado");
@@ -83,6 +83,10 @@ module prueba_tx;
                     $display(o_tx_data);
                     #demora;
                 end
+            
+             if(o_tx_data == 1'b1) //STOP bit
+              $display("parity bit detectado");
+		      #demora;
             
                if(o_tx_data == 1'b1) //STOP bit
               $display("stop bit detectado");

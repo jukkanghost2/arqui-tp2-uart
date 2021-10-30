@@ -99,6 +99,7 @@ module top_test;
 		    
             for(index = 0; index <N_OPS; index = index + 1)
             begin
+            ///// OPERANDO 1
                         tx_data_byte <= $random;           
                         #period operando1 <= tx_data_byte;
                         i_tx_signal = 1'b1;             
@@ -108,6 +109,7 @@ module top_test;
                         #(demora*10)	
                         #demora
                         
+            ///// OPERANDO 2             
                         tx_data_byte <= $random;  
                         if(index > 5) tx_data_byte <= 3;         
                         #period operando2 <= tx_data_byte;
@@ -117,15 +119,19 @@ module top_test;
             
                         #(demora*10)  
                         #demora
-                        
+            ///// OPCODE                                     
                         tx_data_byte <= OPS[index];
                         #period opcode <= tx_data_byte; 
                         i_tx_signal = 1'b1; 
                         #10000
                         i_tx_signal = 1'b0; 
-            
+            ///// RESULT             
                         #(demora*10)
                         #demora
+                        
+                        #(demora*10)	  
+                        #demora
+
                         
                         case(index)
                               0: 

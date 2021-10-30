@@ -36,7 +36,7 @@ module prueba_rx_tb;
    // duration for each bit = 10 * timescale = 10 * 1 ns  = 10ns
   localparam                        period = 200;
   localparam                        demora = 104167; //(1/baudrate)
-  localparam     [7:0]              byte_to_rx = 8'b01010101; 
+  localparam     [8:0]              byte_to_rx = 9'b010101010; 
   integer data_index = 0;
   
   
@@ -71,7 +71,7 @@ module prueba_rx_tb;
             i_rx_data_input = 1'b0; ////START
 		    #demora
 		    
-            for(data_index = 0; data_index <8; data_index = data_index +1)
+            for(data_index = 0; data_index <9; data_index = data_index +1)
             begin
                 i_rx_data_input <= byte_to_rx[data_index];
                 $display("mando %d", byte_to_rx[data_index]);
