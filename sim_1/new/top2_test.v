@@ -1,11 +1,11 @@
-`timescale 1ns / 100ps
+`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
 // 
-// Create Date: 10/21/2021 04:28:08 PM
+// Create Date: 11/04/2021 12:36:19 PM
 // Design Name: 
-// Module Name: top_test
+// Module Name: top2_test
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,8 +20,9 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module top_test;
-   //PARAMETERS
+module top2_test;
+
+//PARAMETERS
    parameter     SIZEDATA = 8;
    parameter     SIZEOP = 6;
    parameter     N_OPS = 8;
@@ -32,39 +33,27 @@ module top_test;
    //INPUTS
    reg           i_clock;
    reg           i_reset;
-   wire           i_tx;
    reg           i_tx_signal;  
    reg    [DATA_WIDTH - 1:0]  i_tx_data_byte;
    reg    [PARITY_WIDTH - 1:0]  i_tx_parity;
 
    //OUTPUTS
-   wire           o_rx;
-   wire           o_tx_done;
    wire           o_rx_done;
    wire  [DATA_WIDTH - 1:0]  o_rx_data_byte;
    wire  [PARITY_WIDTH - 1:0]    o_rx_parity;
    
-   TOP top_test (
-    .i_clock    (i_clock),
-    .i_reset    (i_reset),
-    .i_tx       (i_tx),
-    .o_rx       (o_rx),
-    .o_tx_done  (o_tx_done)
+   TOP2 top2_test (
+    .i_clock      (i_clock),
+    .i_reset      (i_reset),
+    .i_tx_signal  (i_tx_signal),
+    .i_tx_data_byte  (i_tx_data_byte),
+    .i_tx_parity  (i_tx_parity),
+    .o_rx_done         (o_rx_done),
+    .o_rx_data_byte    (o_rx_data_byte),
+    .o_rx_parity    (o_rx_parity)
    );
    
-   UART uart_test (
-    .i_clock         (i_clock),
-    .i_reset         (i_reset),
-    .i_rx_data       (o_rx),
-    .o_tx_data       (i_tx),
-    .i_tx_signal     (i_tx_signal),
-    .i_tx_result     (i_tx_data_byte),
-    .i_parity        (i_tx_parity),
-    .o_rx_done       (o_rx_done),
-    .o_rx_data       (o_rx_data_byte),
-    .o_parity        (o_rx_parity),
-    .o_tx_done       (tx_done)
-    );
+  
     
     reg [SIZEOP-1:0] OPS[0:N_OPS-1];
     

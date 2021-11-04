@@ -21,13 +21,17 @@
 
 
 module prueba_tx;
-
+ //PARAMETERS
+   parameter DATA_WIDTH = 8;
+   parameter STOP_WIDTH = 1;
+   parameter PARITY_WIDTH = 1;
   //INPUTS
    reg           i_clock;
    reg           i_tick;
    reg           i_reset;
    reg           i_tx_signal;
-   reg  [7:0]    i_data_byte;
+   reg  [DATA_WIDTH-1:0]    i_data_byte;
+   reg  [PARITY_WIDTH -1 :0] i_parity;
 
    //OUTPUTS
    wire           o_tick;
@@ -38,8 +42,11 @@ module prueba_tx;
    // duration for each bit = 10 * timescale = 10 * 1 ns  = 10ns
   localparam                        period = 200;
   localparam                        demora = 104167; //(1/baudrate)
-  reg    [7:0]              byte_from_tx = 0; 
+  reg    [DATA_WIDTH-1:0]           byte_from_tx = 0; 
+  reg    [PARITY_WIDTH-1:0]         parity_from_tx = 0; 
   integer data_index = 0;
+  integer parity_index = 0;
+  integer stop_index = 0;
   
   BR_GENERATOR br_test (
     .i_clock           (i_clock),
@@ -51,9 +58,10 @@ module prueba_tx;
     .i_tick            (i_tick),
     .i_reset           (i_reset),
     .i_data_byte       (i_data_byte),
+    .i_parity          (i_parity),
     .i_tx_signal       (i_tx_signal), 
     .o_done_bit        (o_done_bit), 
-    .o_tx_data         (o_tx_data)
+    .o_tx_data         (o_tx_data) 
   );
    
   always @(posedge i_clock) //Incoming tick
@@ -70,31 +78,52 @@ module prueba_tx;
 		    #demora
 
             i_tx_signal = 1'b1; 
-            i_data_byte <= 8'b10101010;
-		    #400
-		    i_tx_signal = 1'b0; 
+            i_data_byte <= 8'b11110101;
+            i_parity <= 1'b1;
+		    #(demora/2)
+		    i_tx_signal = 1'b0;
+		    ///START
 		    if(o_tx_data == 1'b0) //Start bit
-            $display("start bit detectado");
 		    begin
-		    #demora		    
-                for(data_index = 0; data_index <8; data_index = data_index +1)
+		    #demora
+            $display("start bit detectado at time %t", $time);
+		    begin
+		       
+		    
+		    ///DATA
+                for(data_index = 0; data_index <DATA_WIDTH ; data_index = data_index +1)
                 begin
                     byte_from_tx[data_index] <= o_tx_data;
-                    $display(o_tx_data);
-                    #demora;
+                    $display("data %d", o_tx_data);
+                   #demora;
                 end
-            
-             if(o_tx_data == 1'b1) //STOP bit
-              $display("parity bit detectado");
-		      #demora;
-            
-               if(o_tx_data == 1'b1) //STOP bit
-              $display("stop bit detectado");
-		      #demora;
+                
+             ///PARITY
+              for(parity_index = 0; parity_index <PARITY_WIDTH; parity_index = parity_index +1)
+                begin
+                    parity_from_tx[parity_index] <= o_tx_data;
+                     $display("parity %d", o_tx_data);
+                  #demora;
+                end
+            	
+            ///STOP
+               for(stop_index = 0; stop_index <STOP_WIDTH; stop_index = stop_index +1)
+                begin
+                    if(o_tx_data == 1'b1) //Stop bit
+                    begin
+                         $display("stop %d", o_tx_data);
+                        #demora;
+                    end
+                    else
+                    begin
+                        $display("stop no recibido %d ", o_tx_data);
+                    end
+                end
             end
-            
+            end
+            #demora
 		    $display("transmitido %b \n", byte_from_tx);
-		    if(byte_from_tx == 8'b10101010)
+		    if((byte_from_tx == i_data_byte) & (parity_from_tx == i_parity))
 		      $display("correct");
 		    else
 		      $display("failed");

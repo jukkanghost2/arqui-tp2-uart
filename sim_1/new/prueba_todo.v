@@ -21,13 +21,19 @@
 
 
 module prueba_todo;
-  //INPUTS
+   //PARAMETERS
+   parameter DATA_WIDTH = 8;
+   parameter STOP_WIDTH = 1;
+   parameter PARITY_WIDTH = 1;
+   
+   //INPUTS
    reg           i_clock;
    reg           i_tick;
    reg           i_reset;
    reg           i_tx_signal;
-   reg  [7:0]    i_data_byte;
-
+   reg  [DATA_WIDTH-1:0]    i_data_byte;
+   reg  [PARITY_WIDTH-1:0]  i_parity;   
+   
    //OUTPUTS
    wire           o_tick;
    wire           o_done_bit_tx;
@@ -105,7 +111,8 @@ module prueba_todo;
     .i_reset           (i_reset),
     .i_rx_data_input   (i_rx_data_input), 
     .o_done_bit        (o_done_bit_rx), 
-    .o_data_byte       (o_data_byte)
+    .o_data_byte       (o_data_byte),
+    .o_parity          (o_parity)    
   );
   
     UART_TX tx_test (
@@ -114,14 +121,15 @@ module prueba_todo;
     .i_reset           (i_reset),
     .i_data_byte       (i_data_byte),
     .i_tx_signal       (i_tx_signal), 
+    .i_parity          (i_parity),
     .o_done_bit        (o_done_bit_tx), 
     .o_tx_data         (o_tx_data)
   );
   
-  always @(*) //BR GENERATOR AL TX Y RX
+  always @(posedge i_clock) //BR GENERATOR AL TX Y RX
     i_tick  <=  o_tick;
    
-  always @(*) //INTF ALU
+  always @(posedge i_clock) //INTF ALU
     begin
      i_datoa       <=  o_alu_datoa;
      i_datob       <=  o_alu_datob;
@@ -129,14 +137,14 @@ module prueba_todo;
      i_alu_result  <=  o_result;
     end
     
-   always @(*) //RX INTF
+   always @(posedge i_clock) //RX INTF
     begin
      i_rx_done <= o_done_bit_rx;
      i_rx_data <= o_data_byte;
     end 
     
     
-     always @(*) //TX INTF
+     always @(posedge i_clock) //TX INTF
     begin
      i_tx_signal <= o_tx_signal;
      i_data_byte <= o_tx_result;
@@ -200,6 +208,7 @@ module prueba_todo;
 		    #demora
              i_rx_data_input = 1'b1; ///////////STOP
 		    #demora
+		    #demora
 		    if(o_tx_data == 1'b0) //Start bit
             $display("start bit detectado");
 		    begin
@@ -219,7 +228,7 @@ module prueba_todo;
               $display("stop bit detectado");
 		      #demora;
             end
-		    
+		    #demora
 		    /////////RESULT
 		    $display("recibido %b \n", byte_from_tx);
 		    if(byte_from_tx == 6)
