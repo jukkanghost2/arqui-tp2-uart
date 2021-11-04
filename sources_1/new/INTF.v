@@ -24,7 +24,8 @@ module INTF
 #(
   //PARAMETERS
   parameter     SIZEDATA = 8,
-                SIZEOP = 6
+  parameter      SIZEOP = 6,
+  parameter    PARITY_WIDTH = 1
   )
   (
   //INPUTS
@@ -32,6 +33,7 @@ module INTF
   input                            i_reset,
   input                            i_rx_done,
   input signed  [SIZEDATA - 1:0]   i_rx_data,
+  input         [PARITY_WIDTH-1:0] i_rx_parity,
   input         [SIZEDATA - 1:0]   i_alu_result,
 
   //OUTPUTS
@@ -39,6 +41,7 @@ module INTF
   output  reg   [SIZEDATA - 1:0]   o_alu_datob,
   output  reg   [SIZEDATA - 1:0]   o_alu_opcode,
   output  reg   [SIZEDATA - 1:0]   o_tx_result,
+  output  reg   [PARITY_WIDTH-1:0] o_tx_parity,
   output  reg                      o_tx_signal
   );
   
@@ -50,11 +53,12 @@ module INTF
   
   reg [3:0]  current_state  = 0;
   reg [3:0]  next_state     = 0;
-  
+  reg                  rx_valid = 1;
   reg [SIZEDATA - 1:0] operando_a;
   reg [SIZEDATA - 1:0] operando_b;
   reg [SIZEDATA - 1:0] opcode;
   reg [SIZEDATA - 1:0] result;
+  reg [PARITY_WIDTH-1:0] parity;
   
    always @(posedge i_clock) //MEMORIA
         if (i_reset)
@@ -62,8 +66,8 @@ module INTF
         else
                 current_state <= next_state;
     
-  
-  
+   
+      
   always @(posedge i_clock) begin: next_state_logic
     case (current_state)
         STATE_OPA:
@@ -71,13 +75,14 @@ module INTF
             if(i_rx_done)
             begin
                 operando_a <= i_rx_data;
-                operando_b <= o_alu_datob;
-                opcode <= o_alu_opcode;
-                result <= o_tx_result;
+                parity <= i_rx_parity;
+                operando_b <= 0;
+                opcode <= 0;
+                result <= 0;
                 next_state <= STATE_OPB;
             end
             else
-            begin
+            begin              
                 next_state <= STATE_OPA;
             end
         end
@@ -88,12 +93,13 @@ module INTF
             begin
                 operando_a <= o_alu_datoa;
                 operando_b <= i_rx_data;
+                parity <= i_rx_parity;
                 opcode <= o_alu_opcode;
                 result <= o_tx_result;
                 next_state <= STATE_OPCODE;
             end
             else
-            begin
+            begin             
                 next_state <= STATE_OPB;
             end
         end
@@ -105,11 +111,13 @@ module INTF
                 operando_a <= o_alu_datoa;
                 operando_b <= o_alu_datob;
                 opcode <= i_rx_data;
+                parity <= i_rx_parity;              
                 result <= o_tx_result;
                 next_state <= STATE_RESULT;
             end
             else
             begin
+               
                 next_state <= STATE_OPCODE;
             end
         end
@@ -120,6 +128,7 @@ module INTF
                 operando_b <= o_alu_datob;
                 opcode <= o_alu_opcode;
                 result <= i_alu_result;
+                parity <= 1;
             next_state <= STATE_OPA;
         end
               
@@ -129,6 +138,7 @@ module INTF
                 operando_b <= 0;
                 opcode <= 0;
                 result <= 0;
+                parity <= 0;
             next_state <= STATE_OPA;
         end
         
@@ -144,6 +154,7 @@ module INTF
               o_alu_datob <= operando_b;
               o_alu_opcode <= opcode;
               o_tx_result <= result;
+              o_tx_parity <= parity;
               o_tx_signal <= 0;
         end
         
@@ -153,6 +164,7 @@ module INTF
               o_alu_datob <= operando_b;
               o_alu_opcode <= opcode;
               o_tx_result <= result;
+              o_tx_parity <= parity;
               o_tx_signal <= 0;
         end
         
@@ -162,6 +174,7 @@ module INTF
               o_alu_datob <= operando_b;
               o_alu_opcode <= opcode;
               o_tx_result <= result;
+               o_tx_parity <= parity;
               o_tx_signal <= 0;
         end
         
@@ -171,6 +184,7 @@ module INTF
               o_alu_datob <= operando_b;
               o_alu_opcode <= opcode;
               o_tx_result <= result;
+              o_tx_parity <= parity;
               o_tx_signal <= 1;
         end
               
@@ -180,6 +194,7 @@ module INTF
               o_alu_datob <= 0;
               o_alu_opcode <= 0;
               o_tx_result <= 0;
+              o_tx_parity <= 0;
               o_tx_signal <= 0;
             end
     endcase        
